@@ -2,8 +2,10 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options as options
 from bs4 import BeautifulSoup
 from time import sleep
-import datetime
+import pandas as pd
+from pandas import DataFrame
 
+#虛擬瀏覽器設定
 options = options()
 prefs = {
     'profile.default_content_setting_values' :
@@ -12,35 +14,86 @@ prefs = {
          }
 }
 options.add_experimental_option('prefs',prefs)
-options.add_argument("--headless")
+options.add_argument("--headless") #不開啟瀏覽器，於背景執行
+
+
+
 headers = {'user-agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.129 Safari/537.36'}
+column_list = ['date','time','team_home','team_away','total','over','under']
 year = input('請輸入年份')
-page=1
-
+print('爬蟲開始執行')
+print('總網頁搜尋中')
 odds_url_list = []
-game_time_list = []
-home_list = []
-away_list = []
-url = 'https://www.oddsportal.com/baseball/usa/mlb-{}/results/#/page/{}/'.format(year,page)
-driver = webdriver.Chrome("./chromedriver.exe",options=options)
-#driver.implicitly_wait(10)
+games_detail= []
+
+
+#搜尋總頁數
+url = 'https://www.oddsportal.com/baseball/usa/mlb-{}/results/#/page/1/'.format(year)
+driver = webdriver.Chrome("./chromedriver.exe", options=options)
+driver.implicitly_wait(10)
 html = driver.get(url)
-print('等待5秒鐘...')
-sleep(5)
 html_data = driver.page_source
-soup = BeautifulSoup(html_data,'html.parser')
-sel_url = soup.select('td[class="name table-participant"] a' )
-'''
-for i in sel_url :
-    half_odds = i['href']
-    odds_url_list.append ("https://www.oddsportal.com/"+half_odds+"#over-under;3")
-
-'''
-sel_date = soup.select('th[class="first2 tl"] span')
-sel_time = soup.select('tr[class="odd deactivate"] td' )
-
-for j in sel_time:
-    print(j.text)
+driver.close()
+soup = BeautifulSoup(html_data, 'html.parser')
+sel_page_total = int(soup.select('div[id="pagination"] a')[-1]['href'].split('/')[2])
 
 
-#print (odds_url_list)
+
+
+#爬取總網址
+for a in range (1,2):
+    try:
+        url = 'https://www.oddsportal.com/baseball/usa/mlb-{}/results/#/page/{}/'.format(year, a)
+        driver = webdriver.Chrome("./chromedriver.exe", options=options)
+        driver.implicitly_wait(10)
+        html = driver.get(url)
+        print('第{}頁連結爬取中...'.format(a))
+        sleep(5)
+        html_data = driver.page_source
+        driver.close()
+        soup = BeautifulSoup(html_data, 'html.parser')
+        sel_url = soup.select('td[class="name table-participant"] a')
+        for i in sel_url:
+            half_odds = i['href']
+            odds_url_list.append("https://www.oddsportal.com" + half_odds + "#over-under;3")
+    except:
+        break
+print('網頁連結搜尋完成')
+print('共'+ str(len(odds_url_list)) + '筆網頁資料')
+#爬取內文
+error_list=[]
+
+for n in odds_url_list:
+    try:
+        driver = webdriver.Chrome("./chromedriver.exe", options=options)
+        driver.implicitly_wait(10)
+        html = driver.get(n)
+        sleep(5)
+        html_data = driver.page_source
+        driver.close()
+        soup = BeautifulSoup(html_data, 'html.parser')
+        tables = pd.read_html(html_data)
+        data = DataFrame(tables[0])
+        team = soup.select('div[id="col-content"] h1')[0].text
+        date_all = soup.select('div[id="col-content"] p')[0].text
+        team_home = team.split(' - ')[0]
+        team_away = team.split(' - ')[1]
+        date_day = date_all.split(', ')[1]
+        date_time = date_all.split(', ')[2]
+        total = data.loc[0, 'Total']
+        over_odds = data.loc[0, 'Over']
+        under_odds = data.loc[0, 'Under']
+        games_detail.append([date_day,date_time,team_home,team_away,total,over_odds,under_odds])
+        print('當前爬蟲進度'+ str(len(games_detail)/len(odds_url_list)) + '...')
+    except:
+        print(n+'網頁異常請確認')
+        error_list.append(n+'網頁異常請確認')
+        continue
+
+print(games_detail)
+print('共' + str(len(error_list)) + '筆網頁異常')
+
+data = pd.DataFrame(games_detail,columns=column_list)
+data.to_csv(f"Season %s.csv"%year, encoding='utf_8_sig')
+print(error_list)
+
