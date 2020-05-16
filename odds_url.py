@@ -41,7 +41,7 @@ for year in range (2010,2020):
 
 
     #爬取總網址
-    for a in range (1,2):
+    for a in range (1,sel_page_total+1):
         try:
             url = 'https://www.oddsportal.com/baseball/usa/mlb-{}/results/#/page/{}/'.format(year, a)
             driver = webdriver.Chrome("./chromedriver.exe", options=options)
