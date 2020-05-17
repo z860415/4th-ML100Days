@@ -104,6 +104,16 @@ for year in range (2010,2020):
             total = data.loc[0, 'Total']
             over_odds = data.loc[0, 'Over']
             under_odds = data.loc[0, 'Under']
+
+            if float(over_odds) > 2 or float(over_odds) <= 1.84:
+                data2 = DataFrame(tables[1])
+                over_odds2 = data2.loc[0, 'Over']
+                under_odds2 = data2.loc[0, 'Under']
+                total2 = data2.loc[0, 'Total']
+                games_detail.append([date_day, date_time, team_home, team_away, total2, over_odds2, under_odds2])
+            else:
+                games_detail.append([date_day, date_time, team_home, team_away, total, over_odds, under_odds])
+
             games_detail.append([date_day,date_time,team_home,team_away,total,over_odds,under_odds])
             print('當前爬蟲進度'+ str(len(games_detail)/len(odds_list)*100) + '%...')
         except Exception as e:
@@ -123,5 +133,5 @@ for year in range (2010,2020):
     data = pd.DataFrame(error_list)
     data.to_csv(f"Season_%s_error_list.csv" % year, encoding='utf_8_sig')
     end0=time.time()
-    print('%s賽季爬蟲完成，共%s筆網頁，耗時%0.2f秒' % (year,(len(games_detail) + len(error_list)), end1 - start1))
+    print('%s賽季爬蟲完成，共%s筆網頁，耗時%0.2f秒' % (year,(len(games_detail) + len(error_list)), end0 - start0))
     print('共' + str(len(error_list)) + '筆網頁異常')
