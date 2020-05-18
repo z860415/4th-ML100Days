@@ -79,6 +79,7 @@ for year in range (2010,2020):
     odds_list1 = pd.read_csv('Season_{}_url_list .csv'.format(year), encoding='utf-8',index_col=0).values.tolist()
     error_list = []
     error_code = []
+    nan_list = []
     # pd.valuse.tolist 輸出為[[url]] 多寫迴圈拆開
     for i in odds_list1:
         for j in i:
@@ -105,6 +106,7 @@ for year in range (2010,2020):
             total = data.loc[0, 'Total']
             over_odds = data.loc[0, 'Over']
             under_odds = data.loc[0, 'Under']
+
             if float(over_odds) > 2 or float(over_odds) <= 1.8:
                 try:
                     data2 = DataFrame(tables[1])
@@ -116,6 +118,8 @@ for year in range (2010,2020):
                 except:
                     games_detail.append([date_day, date_time, team_home, team_away, total, over_odds, under_odds])
                     print(date_day, date_time, team_home, team_away, total, over_odds, under_odds)
+            elif over_odds == '' :
+                nan_list.append(n)
             else:
                 games_detail.append([date_day, date_time, team_home, team_away, total, over_odds, under_odds])
                 print(date_day, date_time, team_home, team_away, total, over_odds, under_odds)
@@ -130,12 +134,23 @@ for year in range (2010,2020):
         end1 = time.time()
         print('第%s筆網頁完成，共耗時%0.2f秒'%((len(games_detail)+len(error_list)),end1-start1))
 
+
+
     data = pd.DataFrame(games_detail,columns=column_list)
     data.to_csv(f"Season_%s_data.csv"%year, encoding='utf_8_sig')
+
     error_csv = pd.DataFrame(error_list)
     error_csv.to_csv(f"Season_%s_error_list.csv" % year, encoding='utf_8_sig')
+
     error_code_csv = pd.DataFrame(error_code)
     error_code_csv.to_csv(f"Season_%s_error_code.csv" % year, encoding='utf_8_sig')
+
+    nan_csv = pd.DataFrame(nan_list)
+    nan_csv.to_csv(f"Season_%s_nan_list.csv" % year, encoding='utf_8_sig')
+
+
+
     end0=time.time()
     print('%s賽季爬蟲完成，共%s筆網頁，耗時%0.2f秒' % (year,(len(games_detail) + len(error_list)), end0 - start0))
     print('共' + str(len(error_list)) + '筆網頁異常')
+    print('共' + str(len(nan_list)) + '筆網頁賠率空值')
