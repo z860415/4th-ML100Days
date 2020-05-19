@@ -53,7 +53,7 @@ for year in range(2010,2020):
             print('第{}頁連結爬取中...'.format(a))
             sleep(5)
             html_data = driver.page_source
-            driver.close()
+            driver.quit()
             soup = BeautifulSoup(html_data, 'html.parser')
             sel_url = soup.select('td[class="name table-participant"] a')
             for i in sel_url:
@@ -72,7 +72,7 @@ for year in range(2010,2020):
 
 
 # 爬取內文
-for year in range (2010,2020):
+for year in range (2017,2009,-1):
     start0 = time.time()
     games_detail = []
     odds_list = []
@@ -95,7 +95,6 @@ for year in range (2010,2020):
             html = driver.get(n)
             #sleep(5)
             html_data = driver.page_source
-            driver.close()
             soup = BeautifulSoup(html_data, 'html.parser')
             tables = pd.read_html(html_data)
             data = DataFrame(tables[0])
@@ -109,7 +108,7 @@ for year in range (2010,2020):
             over_odds = data.loc[0, 'Over']
             under_odds = data.loc[0, 'Under']
 
-            if float(over_odds) > 2 or float(over_odds) <= 1.8 and len(over_odds) > 1 :
+            if (float(over_odds) > 2 or float(over_odds) <= 1.8) and len(over_odds) > 1 :
                 try:
                     data2 = DataFrame(tables[1])
                     over_odds2 = data2.loc[0, 'Over']
@@ -133,6 +132,9 @@ for year in range (2010,2020):
             error_list.append(n)
             error_code.append(e)
             continue
+        finally:
+            print('虛擬瀏覽器已關閉')
+            driver.quit()
         end1 = time.time()
         print('第%s筆網頁完成，共耗時%0.2f秒'%((len(games_detail)+len(error_list)),end1-start1))
 
@@ -152,7 +154,6 @@ for year in range (2010,2020):
             html = driver.get('error_url')
             # sleep(5)
             html_data = driver.page_source
-            driver.close()
             soup = BeautifulSoup(html_data, 'html.parser')
             total = soup.select('div[id="odds-data-table"] a ')[0].text.split('Under ')[1]
             under_odds = soup.select('span[class="avg chunk-odd nowrp"] a ')[0].text
@@ -164,13 +165,13 @@ for year in range (2010,2020):
             date_day = date_all.split(', ')[1]
             date_time = date_all.split(', ')[2]
 
-            if float(over_odds) > 2 or float(over_odds) <= 1.8 and len(over_odds) > 1:
+            if (float(over_odds) > 2 or float(over_odds) <= 1.8 )and len(over_odds) > 1:
                 try:
                     over_odds2 = soup.select('span[class="avg chunk-odd nowrp"] a ')[3].text
                     under_odds2 = soup.select('span[class="avg chunk-odd nowrp"] a ')[2].text
                     total2 = soup.select('div[id="odds-data-table"] a ')[4].text.split('Under ')[1]
 
-                    if float(over_odds2) > 2 or float(over_odds2) <= 1.8 and len(over_odds2) > 1:
+                    if float(over_odds2) > 2 or float(over_odds2) <= 1.8 :
                         try:
                             over_odds3 = soup.select('span[class="avg chunk-odd nowrp"] a ')[5].text
                             under_odds3 = soup.select('span[class="avg chunk-odd nowrp"] a ')[4].text
@@ -182,8 +183,6 @@ for year in range (2010,2020):
                             games_detail.append(
                                 [date_day, date_time, team_home, team_away, total2, over_odds2, under_odds2])
                             print([date_day, date_time, team_home, team_away, total2, over_odds2, under_odds2])
-                    elif len(over_odds) < 1:
-                        nan_list.append(error_url)
                     else:
                         games_detail.append(
                             [date_day, date_time, team_home, team_away, total2, over_odds2, under_odds2])
@@ -204,6 +203,9 @@ for year in range (2010,2020):
             error_list2.append(error_url)
             error_code2.append(e)
             continue
+        finally:
+            print('虛擬瀏覽器已關閉')
+            driver.quit()
         end4 = time.time()
         print('網頁爬蟲完成，共耗時%0.2f秒' % (end4 - start4))
 
