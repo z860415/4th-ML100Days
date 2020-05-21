@@ -19,3 +19,4 @@ for year in range(start_year,end_year):
         targetDate = b.strftime("%Y-%m-%d")
         data.loc[i,'date'] = targetDate
     data.to_csv("./Season_data/Season_{}_data.csv".format(year), encoding='utf_8_sig', index=0)
+    print('{}年日期修改完成'.format(year))
